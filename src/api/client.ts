@@ -1,7 +1,7 @@
 import type { ApiEntity, ApiFinanceRecord, ApiFlowRecord } from './types'
+import { getToken, clearToken } from './auth'
 
-const BASE    = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
-const API_KEY = (import.meta.env.VITE_API_KEY  as string | undefined) ?? ''
+const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
 
 async function get<T>(path: string, params?: Record<string, string>): Promise<T> {
   const url = new URL(`${BASE}${path}`, location.origin)
@@ -9,8 +9,13 @@ async function get<T>(path: string, params?: Record<string, string>): Promise<T>
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
   }
   const headers: Record<string, string> = {}
-  if (API_KEY) headers['X-API-Key'] = API_KEY
-  const res = await fetch(url.toString(), API_KEY ? { headers } : undefined)
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(url.toString(), { headers })
+  if (res.status === 401) {
+    clearToken()
+    location.reload()
+  }
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`)
   const json = (await res.json()) as { result: T }
   return json.result

@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { EntityProvider } from './api/EntityContext'
+import { getToken } from './api/auth'
 import TopBar from './components/TopBar'
 import SubNav from './components/SubNav'
 import HomePage from './pages/HomePage'
 import EntityPage from './pages/EntityPage'
 import BudgetingPage from './pages/BudgetingPage'
+import LoginPage from './pages/LoginPage'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +20,10 @@ function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => !!getToken())
+
+  if (!authed) return <LoginPage onLogin={() => setAuthed(true)} />
+
   return (
     <EntityProvider>
       <BrowserRouter>
